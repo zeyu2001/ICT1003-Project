@@ -1,9 +1,4 @@
-#include <Wire.h>
-#include <SPI.h>
-#include <TinyScreen.h>
 #include <qrcode.h>
-
-
 
 void generate_qr_code(char *qr_target) {
 
@@ -16,9 +11,6 @@ void generate_qr_code(char *qr_target) {
     QRCode qrcode;
     uint8_t qrcodeData[qrcode_getBufferSize(3)];
     qrcode_initText(&qrcode, qrcodeData, 3, 0, qr_target);
-
-    // Initialize cursor
-    display.setCursor(0,0);
 
     // Center-align QR code
     uint8_t x0 = 48 - (qrcode.size);
