@@ -32,7 +32,6 @@ uint8_t ble_connection_state = false;
 char *rx = NULL;
 
 void setup() {
-<<<<<<< HEAD
   SerialMonitorInterface.begin(9600);
   while (!SerialMonitorInterface); //This line will block until a serial monitor is opened with TinyScreen+!
   BLEsetup();
@@ -41,11 +40,6 @@ void setup() {
   Wire.begin();
   display.begin();
   display.setBrightness(10);
-
-  display.clearScreen();
-  display.setCursor(48 - (display.getPrintWidth("Generate a QR Code") / 2), 32);
-  display.setFont(thinPixel7_10ptFontInfo);
-  display.println("Generate a QR Code");
 }
 
 void buttonLoop() {
@@ -57,21 +51,13 @@ void buttonLoop() {
   if (display.getButtons(TSButtonUpperLeft)) {
 
     // Display the current QR plaintext
+
     if (rx)
     {
       display.clearScreen();
       display.setCursor(48 - (display.getPrintWidth(rx) / 2), 32);
       display.setFont(thinPixel7_10ptFontInfo);
       display.println(rx);
-    }
-
-    // No QR code given 
-    else
-    {
-      display.clearScreen();
-      display.setCursor(48 - (display.getPrintWidth("Generate a QR Code") / 2), 32);
-      display.setFont(thinPixel7_10ptFontInfo);
-      display.println("Generate a QR Code");
     }
     
   }
@@ -83,114 +69,57 @@ void buttonLoop() {
   if (display.getButtons(TSButtonUpperRight)) {
 
     // Go back to main display
-    if (rx)
-    {
-      display.clearScreen();
-      generate_qr_code(rx);
-    }
-
-    // No QR code given 
-    else
-    {
-      display.clearScreen();
-      display.setCursor(48 - (display.getPrintWidth("Generate a QR Code") / 2), 32);
-      display.setFont(thinPixel7_10ptFontInfo);
-      display.println("Generate a QR Code");
-    }
+    display.clearScreen();
+    generate_qr_code(rx);
     
   }
   display.setCursor(95 - display.getPrintWidth("Pressed!"), 54);
   if (display.getButtons(TSButtonLowerRight)) {
     display.println("Pressed!");
   }
-=======
-    SerialMonitorInterface.begin(9600);
-    while (!SerialMonitorInterface); //This line will block until a serial monitor is opened with TinyScreen+!
-    BLEsetup();
-
-    // Initialize TinyScreen display
-    Wire.begin();
-    display.begin();
-    display.setBrightness(10);
-}
-
-void buttonLoop() {
-    display.setCursor(0, 0);
-    // getButtons() function can be used to test if any button is pressed, or used like:
-    // getButtons(TSButtonUpperLeft) to test a particular button, or even like:
-    // getButtons(TSButtonUpperLeft|TSButtonUpperRight) to test multiple buttons
-    // results are flipped as you would expect when setFlip(true)
-    if (display.getButtons(TSButtonUpperLeft)) {
-
-        // Display the current QR plaintext
-
-        if (rx) {
-            display.clearScreen();
-            display.setCursor(48 - (display.getPrintWidth(rx) / 2), 32);
-            display.setFont(thinPixel7_10ptFontInfo);
-            display.println(rx);
-        }
-
-    }
-    display.setCursor(0, 54);
-    if (display.getButtons(TSButtonLowerLeft)) {
-        display.println("Pressed!");
-    }
-    display.setCursor(95 - display.getPrintWidth("Pressed!"), 0);
-    if (display.getButtons(TSButtonUpperRight)) {
-
-        // Go back to main display
-        display.clearScreen();
-        generate_qr_code(rx);
-
-    }
-    display.setCursor(95 - display.getPrintWidth("Pressed!"), 54);
-    if (display.getButtons(TSButtonLowerRight)) {
-        display.println("Pressed!");
-    }
->>>>>>> 43de123096cabd5c909d768a0b772c13c345847a
 }
 
 void loop() {
-    aci_loop();//Process any ACI commands or events from the NRF8001- main BLE handler, must run often. Keep main loop short.
-    if (ble_rx_buffer_len) {//Check if data is available
+  aci_loop();//Process any ACI commands or events from the NRF8001- main BLE handler, must run often. Keep main loop short.
+  if (ble_rx_buffer_len) {//Check if data is available
 
-        // RX data
-        rx = (char *) ble_rx_buffer;
+    // RX data
+    rx = (char*) ble_rx_buffer;
 
-        // Print to Serial Monitor
-        SerialMonitorInterface.print(ble_rx_buffer_len);
-        SerialMonitorInterface.print(" : ");
-        SerialMonitorInterface.println(rx);
+    // Print to Serial Monitor
+    SerialMonitorInterface.print(ble_rx_buffer_len);
+    SerialMonitorInterface.print(" : ");
+    SerialMonitorInterface.println(rx);
 
-        display.clearScreen();
+    display.clearScreen();
+    
+    // Generate QR code based on RX input
+    generate_qr_code((char*) ble_rx_buffer);
+    
+    ble_rx_buffer_len = 0;//clear after reading
 
-        // Generate QR code based on RX input
-        generate_qr_code((char *) ble_rx_buffer);
-
-        ble_rx_buffer_len = 0;//clear after reading
-
+  }
+  if (SerialMonitorInterface.available()) {//Check if serial input is available to send
+    delay(10);//should catch input
+    uint8_t sendBuffer[21];
+    uint8_t sendLength = 0;
+    while (SerialMonitorInterface.available() && sendLength < 19) {
+      sendBuffer[sendLength] = SerialMonitorInterface.read();
+      sendLength++;
     }
-    if (SerialMonitorInterface.available()) {//Check if serial input is available to send
-        delay(10);//should catch input
-        uint8_t sendBuffer[21];
-        uint8_t sendLength = 0;
-        while (SerialMonitorInterface.available() && sendLength < 19) {
-            sendBuffer[sendLength] = SerialMonitorInterface.read();
-            sendLength++;
-        }
-        if (SerialMonitorInterface.available()) {
-            SerialMonitorInterface.print(F("Input truncated, dropped: "));
-            if (SerialMonitorInterface.available()) {
-                SerialMonitorInterface.write(SerialMonitorInterface.read());
-            }
-        }
-        sendBuffer[sendLength] = '\0'; //Terminate string
-        sendLength++;
-        if (!lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, (uint8_t *) sendBuffer, sendLength)) {
-            SerialMonitorInterface.println(F("TX dropped!"));
-        }
+    if (SerialMonitorInterface.available()) {
+      SerialMonitorInterface.print(F("Input truncated, dropped: "));
+      if (SerialMonitorInterface.available()) {
+        SerialMonitorInterface.write(SerialMonitorInterface.read());
+      }
     }
+    sendBuffer[sendLength] = '\0'; //Terminate string
+    sendLength++;
+    if (!lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, (uint8_t*)sendBuffer, sendLength))
+    {
+      SerialMonitorInterface.println(F("TX dropped!"));
+    }
+  }
 
-    buttonLoop();
+  buttonLoop();
 }
