@@ -2,6 +2,13 @@
 #include <SPI.h>
 #include <TinyScreen.h>
 #include <STBLE.h>
+#include <Wireling.h>
+#include "BMA250.h"
+#include <RTCZero.h>
+RTCZero rtc;
+
+BMA250 accel_sensor; // accelerometer sensor object
+int accelSensorPort = 3;
 
 // Library must be passed the board type
 // TinyScreenDefault for TinyScreen shields
@@ -31,6 +38,33 @@ uint8_t ble_connection_state = false;
 
 char *rx = NULL;
 
+// For Pedometer
+bool validStepPattern = false;
+int stepIntervalLow = 200;
+unsigned long stepIntervalHigh = 2000;
+unsigned long lastStepTime = 0;
+
+const int amtSamples = 32;
+int aBuff[amtSamples];
+int aBuffPos = 0;
+unsigned long sampleInterval = 20;
+unsigned long lastSample = 0;
+int sampleNew = 0;
+int sampleOld = 0;
+int precision = 10;
+int stepsInLastThirtyMinutes = 0; // used to keep track of recent steps to notify wearer of inactive periods
+bool halfStep = false;
+bool stepAlert = false;
+
+const int STEP_TRIGGER = 250;
+unsigned long stepTimestamps[STEP_TRIGGER] = {};
+int stepArr[4] = {};
+int stepsTowardGoal = 0; 
+
+//int X, Y, Z, A, mX, mY, mZ;
+
+int totalSteps = 0;
+
 void setup() {
   SerialMonitorInterface.begin(9600);
   while (!SerialMonitorInterface); //This line will block until a serial monitor is opened with TinyScreen+!
@@ -40,6 +74,14 @@ void setup() {
   Wire.begin();
   display.begin();
   display.setBrightness(10);
+
+  display.setCursor(48 - (display.getPrintWidth("Hello!") / 2), 32);
+  display.setFont(thinPixel7_10ptFontInfo);
+  display.println("Hello!");
+
+  SerialMonitorInterface.print("Initializing BMA...");
+  // Set up the BMA250 acccelerometer sensor
+  accel_sensor.begin(BMA250_range_2g, BMA250_update_time_64ms); 
 }
 
 void buttonLoop() {
@@ -50,15 +92,16 @@ void buttonLoop() {
   // results are flipped as you would expect when setFlip(true)
   if (display.getButtons(TSButtonUpperLeft)) {
 
-    // Display the current QR plaintext
+    // Display the current Number of Steps
 
-    if (rx)
-    {
-      display.clearScreen();
-      display.setCursor(48 - (display.getPrintWidth(rx) / 2), 32);
-      display.setFont(thinPixel7_10ptFontInfo);
-      display.println(rx);
-    }
+    display.clearScreen();
+    
+    char stepsString[21];
+    itoa(totalSteps, stepsString, 10);
+    
+    display.setCursor(48 - (display.getPrintWidth(stepsString) / 2), 32);
+    display.setFont(thinPixel7_10ptFontInfo);
+    display.println(totalSteps);
     
   }
   display.setCursor(0, 54);
@@ -122,4 +165,12 @@ void loop() {
   }
 
   buttonLoop();
+
+  Wireling.selectPort(accelSensorPort);
+  updatePedometer();
+  
+  // The BMA250 can only poll new sensor values every 64ms, so this delay
+  // will ensure that we can continue to read values
+  delay(250);
+  // ***Without the delay, there would not be any sensor output*** 
 }
