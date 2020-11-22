@@ -7,6 +7,7 @@ app = Flask(__name__)
 def index():
     user = {'username': 'Kai Huan', 'steps': None, 'temp': None}
     if request.method == "POST":
-        user['steps'] = request.form['steps']
-        user['temp'] = request.form['temp']
+        json_data = request.get_json(force=True)
+        user['steps'] = json_data['steps']
+        user['temp'] = json_data['temp']
     return render_template('index.html', title='Home', user=user)
