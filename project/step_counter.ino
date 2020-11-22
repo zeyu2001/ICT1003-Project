@@ -11,7 +11,7 @@ int getTotalSteps(){
 int updatePedometer() {
  // if (millis() < sampleInterval + lastSample)return 0; we don't need to check this as it takes longer than sampleInterval to updatePulse anyway
 
-  int temp = ((accel_sensor.rawTemp * 0.5) + 24.0);
+  temp = ((accel_sensor.rawTemp * 0.5) + 24.0);
   
   SerialMonitorInterface.print("X = ");
   SerialMonitorInterface.print(accel_sensor.X);

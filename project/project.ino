@@ -30,6 +30,7 @@ TinyScreen display = TinyScreen(TinyScreenDefault);
 #define SerialMonitorInterface SerialUSB
 #endif
 
+#define PIPE_UART_OVER_BTLE_UART_TX_TX 0
 
 uint8_t ble_rx_buffer[21];
 uint8_t ble_rx_buffer_len = 0;
@@ -64,6 +65,7 @@ int stepsTowardGoal = 0;
 //int X, Y, Z, A, mX, mY, mZ;
 
 int totalSteps = 0;
+int temp = 0;
 
 void setup() {
   SerialMonitorInterface.begin(9600);
@@ -106,7 +108,7 @@ void buttonLoop() {
   }
   display.setCursor(0, 54);
   if (display.getButtons(TSButtonLowerLeft)) {
-    display.println("Pressed!");
+    display.on();
   } 
   display.setCursor(95 - display.getPrintWidth("Pressed!"), 0);
   if (display.getButtons(TSButtonUpperRight)) {
@@ -118,7 +120,7 @@ void buttonLoop() {
   }
   display.setCursor(95 - display.getPrintWidth("Pressed!"), 54);
   if (display.getButtons(TSButtonLowerRight)) {
-    display.println("Pressed!");
+    display.off();
   }
 }
 
@@ -142,26 +144,28 @@ void loop() {
     ble_rx_buffer_len = 0;//clear after reading
 
   }
-  if (SerialMonitorInterface.available()) {//Check if serial input is available to send
-    delay(10);//should catch input
-    uint8_t sendBuffer[21];
-    uint8_t sendLength = 0;
-    while (SerialMonitorInterface.available() && sendLength < 19) {
-      sendBuffer[sendLength] = SerialMonitorInterface.read();
-      sendLength++;
-    }
-    if (SerialMonitorInterface.available()) {
-      SerialMonitorInterface.print(F("Input truncated, dropped: "));
-      if (SerialMonitorInterface.available()) {
-        SerialMonitorInterface.write(SerialMonitorInterface.read());
-      }
-    }
-    sendBuffer[sendLength] = '\0'; //Terminate string
-    sendLength++;
-    if (!lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, (uint8_t*)sendBuffer, sendLength))
-    {
-      SerialMonitorInterface.println(F("TX dropped!"));
-    }
+
+  delay(10);//should catch input
+
+  char toSend[21]; // Output
+  
+  char stepsString[19];
+  sprintf(stepsString, "%0.18d", totalSteps);
+  
+  char tempString[3];
+  sprintf(tempString, "%0.2d", temp);
+  
+  strcpy(toSend, stepsString);
+  strcat(toSend, tempString);
+
+  if (!lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, (uint8_t*)toSend, strlen(toSend)))
+  {
+    SerialMonitorInterface.println(F("TX dropped!"));
+  }
+  else
+  {
+    SerialMonitorInterface.print(F("TX: "));
+    SerialMonitorInterface.println(toSend);
   }
 
   buttonLoop();

@@ -2,4 +2,8 @@
 
 {% block content %}
     <h1>Hi, {{ user.username }}!</h1>
+    {%if user.steps and user.temp %}
+        Steps: {{ user.steps }}
+        Temperature: {{ user.temp }}
+    {% endif %}
 {% endblock %}
