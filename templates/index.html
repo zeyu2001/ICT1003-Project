@@ -1,9 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hi, {{ user.name }}!</h1>
-    {%if user.steps and user.temp %}
-        Steps: {{ user.steps }}</br>
-        Temperature: {{ user.temp }}
-    {% endif %}
+    <div class="container-fluid">
+        <div class="content">
+            <h1>Hi, {{ user.name }}!</h1>
+            {% if user.steps < 5 %}
+            <div class="percent-5">
+            {% elif user.steps < 25 %}
+            <div class="percent-25">
+            {% elif user.steps < 50 %}
+            <div class="percent-50">
+            {% elif user.steps < 75 %}
+            <div class="percent-75">
+            {% elif user.steps < 100 %}
+            <div class="percent-99">
+            {% else %}
+            <div class="percent-100">
+            {% endif %}
+                <svg width="140px" height="150px">
+                    <circle cx="70" cy="70" r="60"></circle>
+                    <circle cx="70" cy="70" r="60"></circle>
+                    <text text-anchor="middle" x="70" y="80">{{ user.steps }}%</text>
+                </svg>
+            </div>
+            <p>Steps: {{ user.steps }}</p>
+            <p>Temperature: {{ user.temp }}</p>
+        </div>
+        <hr>
+        Icons made by
+        <a href="https://www.flaticon.com/authors/freepik" title="Freepik">
+            Freepik
+        </a> from <a href="https://www.flaticon.com/" title="Flaticon">
+            www.flaticon.com
+        </a>
+    </div>
 {% endblock %}

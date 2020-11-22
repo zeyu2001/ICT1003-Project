@@ -1,0 +1,72 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+circle {
+    position: absolute;
+    fill: none;
+    stroke-width: 10;
+    stroke-dasharray: 380;
+    stroke-linecap: round;
+}
+
+circle:nth-child(1) {
+	stroke-dashoffset: 0;
+    stroke: #eeeeee;
+}
+
+@keyframes percent {
+    0% {
+        stroke-dashoffset: 380;
+        stroke-width: 0;
+    }
+}
+
+.percent-5 circle:nth-child(2) {
+    stroke-dashoffset: 361; /* Here's what's changed */
+    stroke: #de425b;
+    animation: percent 0.5s linear;
+    animation-delay: 0.5s;
+}
+
+.percent-25 circle:nth-child(2) {
+    stroke-dashoffset: 285; /* Here's what's changed */
+    stroke: #f9a160;
+    animation: percent 0.5s linear;
+    animation-delay: 0.5s;
+}
+
+.percent-50 circle:nth-child(2) {
+    stroke-dashoffset: 190; /* Here's what's changed */
+    stroke: #ffde03;
+    animation: percent 0.75s linear;
+    animation-delay: 0.5s;
+}
+
+.percent-75 circle:nth-child(2) {
+    stroke-dashoffset: 95; /* Here's what's changed */
+    stroke: #a7e493;
+    animation: percent 0.75s linear;
+    animation-delay: 0.5s;
+}
+
+.percent-99 circle:nth-child(2) {
+    stroke-dashoffset: 38; /* Here's what's changed */
+    stroke: #4cc790;
+    animation: percent 1s linear;
+    animation-delay: 0.5s;
+}
+
+.percent-100 circle:nth-child(2) {
+    stroke-dashoffset: 0; /* Here's what's changed */
+    stroke: #4cc790;
+    animation: percent 1s linear;
+    animation-delay: 0.5s;
+}
+
+svg > text {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
