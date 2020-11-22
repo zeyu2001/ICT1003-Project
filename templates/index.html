@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hi, {{ user.username }}!</h1>
+    <h1>Hi, {{ user.name }}!</h1>
     {%if user.steps and user.temp %}
-        Steps: {{ user.steps }}
+        Steps: {{ user.steps }}</br>
         Temperature: {{ user.temp }}
     {% endif %}
 {% endblock %}
