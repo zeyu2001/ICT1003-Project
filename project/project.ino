@@ -120,6 +120,7 @@ void buttonLoop() {
   }
   display.setCursor(95 - display.getPrintWidth("Pressed!"), 54);
   if (display.getButtons(TSButtonLowerRight)) {
+    totalSteps = 0;
     display.off();
   }
 }
